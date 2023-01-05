@@ -59,7 +59,11 @@ window.addEventListener('load', () => {
 
 	scene.fog = new Fog(fogColor, 2, camera.far - 2);
 
-	scene.add(new AxesHelper(1));
+	scene.add(new AxesHelper(2));
+
+
+	const sphere = new Mesh(new SphereGeometry(1), new MeshBasicMaterial({color: 'rgb(200,155,155)'}));
+	scene.add(sphere);
 
 	const sphere1 = new Mesh(new SphereGeometry(0.2), new MeshBasicMaterial({color: 'rgb(0,255,255)', opacity: 0.9, transparent: true}));
 	scene.add(sphere1);
