@@ -1,0 +1,14 @@
+{
+  "name": "test",
+  "version": "0.1.0",
+  "description": "test test",
+  "main": "app.cjs",
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "YSandro",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.148.0"
+  }
+}
