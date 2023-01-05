@@ -22,7 +22,6 @@ window.document.addEventListener('contextmenu', event => {
 });
 
 window.addEventListener('load', () => {
-	//const fogColor = new Color(0.5, 0.5, 0.5);
 	const fogColor = new Color(getComputedStyle(document.querySelector('#scrim')).backgroundColor);
 	const clock = new Clock(true);
 	let delta,
@@ -48,7 +47,6 @@ window.addEventListener('load', () => {
 
 	renderer.setPixelRatio(window.devicePixelRatio);
 	renderer.setSize(window.innerWidth, window.innerHeight);
-	renderer.shadowMap.enabled = true;
 	renderer.shadowMap.type = PCFSoftShadowMap;
 	renderer.autoClearColor = false;
 	renderer.autoClearDepth = false;
