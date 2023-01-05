@@ -78,7 +78,7 @@ window.addEventListener('load', () => {
 
 	delta = clock.getDelta();
 
-	let positions = [];
+
 
 	renderer.setAnimationLoop(() => {
 		delta = clock.getDelta();
