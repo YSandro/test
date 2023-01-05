@@ -1,7 +1,7 @@
 {
 	"configurations": [
 		{
-			"name": "Launch Program",
+			"name": "Launch Node app.cjs",
 			"program": "${workspaceFolder}/app.cjs",
 			"request": "launch",
 			"skipFiles": [
@@ -13,7 +13,15 @@
 			"type": "firefox",
 			"request": "launch",
 			"reAttach": true,
-			"name": "Open in Firefox index.html",
+			"name": "Open localhost in Firefox",
+			"url": "http://localhost/index.html",
+			"webRoot": "${workspaceFolder}"
+		},
+		{
+			"type": "firefox",
+			"request": "launch",
+			"reAttach": true,
+			"name": "Open as file in Firefox index.html",
 			"file": "${workspaceFolder}/index.html"
 		}
 	]
