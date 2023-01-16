@@ -8,9 +8,11 @@ import {
 	MeshBasicMaterial,
 	PCFSoftShadowMap,
 	PerspectiveCamera,
+	Raycaster,
 	REVISION,
 	Scene,
 	SphereGeometry,
+	Vector2,
 	Vector3,
 	WebGLRenderer,
 } from 'three';
@@ -24,6 +26,7 @@ window.document.addEventListener('contextmenu', event => {
 window.addEventListener('load', () => {
 	const fogColor = new Color(getComputedStyle(document.querySelector('#scrim')).backgroundColor);
 	const clock = new Clock(true);
+	const mouse = new Vector2();
 	let delta,
 		cntr = 1;
 
@@ -34,13 +37,13 @@ window.addEventListener('load', () => {
 		1,
 		10
 	);
-	camera.position.x = 4;
-	camera.position.z = 4;
+	camera.position.x = 3;
+	camera.position.z = 3;
 	camera.position.y = 2;
 	camera.lookAt(0, 0.2, 0);
 
 	const renderer = new WebGLRenderer({
-		//antialias: true,
+		antialias: false,
 		powerPreference: 'low-power',
 		precision: 'lowp'
 	});
@@ -73,6 +76,29 @@ window.addEventListener('load', () => {
 	scene.add(sphere3);
 	const sphere4 = new Mesh(new SphereGeometry(0.1), new MeshBasicMaterial({color: 'rgb(0,255,255)', opacity: 0.08, transparent: true}));
 	scene.add(sphere4);
+
+	const sphereMarker = new Mesh(new SphereGeometry(0.04), new MeshBasicMaterial({color: 'rgb(255,100,50)', opacity: 0.6, transparent: true}));
+	sphereMarker.name = 'marker';
+	scene.add(sphereMarker);
+
+	const raycaster = new Raycaster();
+	raycaster.near = camera.near;
+	raycaster.far = camera.far;
+
+	const onRayCast = () => {
+		raycaster.setFromCamera(mouse, camera);
+		const intersects = raycaster.intersectObject(sphere);
+		if(intersects.length < 1) return;
+		sphereMarker.position.copy(intersects[0].point);
+	}
+
+	canvasElement.addEventListener('mousemove', event => {
+		event.preventDefault();
+		mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+		mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+		onRayCast();
+	});
 
 	window.addEventListener('resize', () => {
 		camera.aspect = window.innerWidth / window.innerHeight;
