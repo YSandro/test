@@ -1,17 +1,31 @@
 import {
 	AmbientLight,
 	AxesHelper,
+	AudioListener,
+	AudioLoader,
+	BufferGeometry,
 	Clock,
 	Color,
 	Fog,
+	Group,
+	Line,
+	LineBasicMaterial,
 	Mesh,
 	MeshBasicMaterial,
+	MeshLambertMaterial,
+	MeshPhongMaterial,
+	MeshToonMaterial,
 	PCFSoftShadowMap,
 	PerspectiveCamera,
+	PositionalAudio,
+	Quaternion,
 	Raycaster,
 	REVISION,
 	Scene,
 	SphereGeometry,
+	Sprite,
+	SpriteMaterial,
+	TextureLoader,
 	Vector2,
 	Vector3,
 	WebGLRenderer,
@@ -27,8 +41,15 @@ window.addEventListener('load', () => {
 	const fogColor = new Color(getComputedStyle(document.querySelector('#scrim')).backgroundColor);
 	const clock = new Clock(true);
 	const mouse = new Vector2();
-	let delta,
-		cntr = 1;
+	let delta = clock.getDelta(),
+		cntr = 1,
+		arcStarted = false;
+	const arcStart = new Vector3(),
+		arcEnd = new Vector3(),
+		arcMaterial = new LineBasicMaterial({color: 'rgb(255,255,0)'}),
+		arcPoints = [],
+		arcGeometry = new BufferGeometry();
+	let soundOn = false;
 
 	const scene = new Scene();
 	const camera = new PerspectiveCamera(
@@ -37,13 +58,13 @@ window.addEventListener('load', () => {
 		1,
 		10
 	);
-	camera.position.x = 3;
-	camera.position.z = 3;
+	camera.position.x = 2.6;
+	camera.position.z = 2.6;
 	camera.position.y = 2;
 	camera.lookAt(0, 0.2, 0);
 
 	const renderer = new WebGLRenderer({
-		antialias: false,
+		antialias: true,
 		powerPreference: 'low-power',
 		precision: 'lowp'
 	});
@@ -65,40 +86,121 @@ window.addEventListener('load', () => {
 	scene.add(new AxesHelper(2));
 
 
-	const sphere = new Mesh(new SphereGeometry(1), new MeshBasicMaterial({color: 'rgb(200,155,155)'}));
+	const container = new Group();
+	scene.add(container);
+
+	const sphere = new Mesh(new SphereGeometry(1), new MeshBasicMaterial({
+		color: 'rgb(200,155,155)',
+		opacity: 0.5,
+		transparent: true,
+	}));
+	sphere.receiveShadow = true;
 	scene.add(sphere);
 
-	const sphere1 = new Mesh(new SphereGeometry(0.2), new MeshBasicMaterial({color: 'rgb(0,255,255)', opacity: 0.9, transparent: true}));
-	scene.add(sphere1);
-	const sphere2 = new Mesh(new SphereGeometry(0.17), new MeshBasicMaterial({color: 'rgb(0,255,255)', opacity: 0.4, transparent: true}));
-	scene.add(sphere2);
-	const sphere3 = new Mesh(new SphereGeometry(0.13), new MeshBasicMaterial({color: 'rgb(0,255,255)', opacity: 0.15, transparent: true}));
-	scene.add(sphere3);
-	const sphere4 = new Mesh(new SphereGeometry(0.1), new MeshBasicMaterial({color: 'rgb(0,255,255)', opacity: 0.08, transparent: true}));
-	scene.add(sphere4);
 
 	const sphereMarker = new Mesh(new SphereGeometry(0.04), new MeshBasicMaterial({color: 'rgb(255,100,50)', opacity: 0.6, transparent: true}));
 	sphereMarker.name = 'marker';
 	scene.add(sphereMarker);
 
+
+	const listener = new AudioListener();
+	camera.add(listener);
+	const sound = new PositionalAudio(listener);
+	sound.setLoop(true);
+	sound.setDistanceModel('exponential');
+	sound.setMaxDistance(6);
+	const audioLoader = new AudioLoader();
+	audioLoader.load('ritmichnyiy-zvuk-barabana-39655.ogg', buffer => {
+		sound.setBuffer(buffer);
+		container.add(sound);
+	});
+
+	const solnSprite = new Sprite();
+	solnSprite.scale.set(0.25, 0.25, 0.25);
+	const solnMap = new TextureLoader().load('dinamik_64.png', tex => {
+		const solnMaterial = new SpriteMaterial({map: solnMap, fog: false});
+		solnSprite.material = solnMaterial;
+		container.add(solnSprite);
+	})
+
+	window.document.getElementById('snd').addEventListener('click', event => {
+		event.preventDefault();
+		if(listener.context.state === 'suspended'){
+			listener.context.resume();
+			if(!sound.isPlaying) sound.play();
+			soundOn = true;
+			event.target.innerHTML = '&#128266;';
+		}
+		else{
+			listener.context.suspend();
+			soundOn = false;
+			event.target.innerHTML = '&#128264;';
+		}
+	});
+
+
 	const raycaster = new Raycaster();
 	raycaster.near = camera.near;
 	raycaster.far = camera.far;
 
-	const onRayCast = () => {
+	const arcLine = new Line(arcGeometry, arcMaterial);
+	scene.add(arcLine);
+
+
+	const rayCast = (retPos, click) => {
 		raycaster.setFromCamera(mouse, camera);
 		const intersects = raycaster.intersectObject(sphere);
-		if(intersects.length < 1) return;
+		if(intersects.length < 1) return false;
+		if(retPos) retPos.copy(intersects[0].point);
 		sphereMarker.position.copy(intersects[0].point);
+		return true;
 	}
+
+
+	const buildArc = (_arcStart, _arcEnd) => {
+		//console.log('arcStart:', _arcStart, ', arcEnd:', _arcEnd);
+		//const vFrom = new Vector3().copy(_arcStart).normalize();
+		//const vTo = new Vector3().copy(_arcEnd).normalize();
+		//const qt = new Quaternion().setFromUnitVectors(vFrom, vTo); console.log('qt:', qt);
+
+		arcPoints.length = 0;
+		arcPoints.push((new Vector3()).copy(_arcStart));
+		arcPoints.push((new Vector3()).copy(_arcEnd));
+		arcGeometry.setFromPoints(arcPoints);
+	}
+
 
 	canvasElement.addEventListener('mousemove', event => {
 		event.preventDefault();
 		mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
 		mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-		onRayCast();
+		rayCast();
 	});
+
+
+	canvasElement.addEventListener('mousedown', event => {
+		event.preventDefault();
+		if(!event.target.isEqualNode(canvasElement)) return;
+		if(listener.context.state === 'suspended' && soundOn){
+			listener.context.resume();
+			if(!sound.isPlaying) sound.play();
+		}
+
+		if(event.buttons === 1){
+			if(!arcStarted)
+				arcStarted = rayCast(arcStart, true);
+			else{
+				arcStarted = false;
+				if(rayCast(arcEnd, true)){
+					buildArc(arcStart, arcEnd);
+				}
+			}
+		}
+		else if(event.buttons === 2)
+			arcStarted = false;
+	});
+
 
 	window.addEventListener('resize', () => {
 		camera.aspect = window.innerWidth / window.innerHeight;
@@ -106,32 +208,16 @@ window.addEventListener('load', () => {
 		renderer.setSize(window.innerWidth, window.innerHeight);
 	});
 
-	delta = clock.getDelta();
-
-
 
 	renderer.setAnimationLoop(() => {
 		delta = clock.getDelta();
 
-		cntr += delta * 100;
+		cntr += delta;
 
 		// draw here
-		sphere1.position.x = Math.sin(cntr * 0.01) * 2.0;
-		sphere1.position.y = Math.cos(cntr * 0.01) * 2.0;
-		sphere1.position.z = Math.cos(cntr * 0.13) * 1.1;
-
-		sphere2.position.x = Math.sin((cntr - 5) * 0.01) * 2.0;
-		sphere2.position.y = Math.cos((cntr - 5) * 0.01) * 2.0;
-		sphere2.position.z = Math.cos((cntr - 5) * 0.13) * 1.1;
-
-		sphere3.position.x = Math.sin((cntr - 10) * 0.01) * 2.0;
-		sphere3.position.y = Math.cos((cntr - 10) * 0.01) * 2.0;
-		sphere3.position.z = Math.cos((cntr - 10) * 0.13) * 1.1;
-
-		sphere4.position.x = Math.sin((cntr - 15) * 0.01) * 2.0;
-		sphere4.position.y = Math.cos((cntr - 15) * 0.01) * 2.0;
-		sphere4.position.z = Math.cos((cntr - 15) * 0.13) * 1.1;
-
+		container.position.x = Math.sin(cntr * 0.1) * 2.2;
+		container.position.y = Math.cos(cntr * 0.1) * 2.2;
+		container.position.z = Math.cos(cntr * 1.3);
 
 		//if(++cntr > 9999999) cntr = 0;
 		if(cntr > 9999999) cntr = 0;
