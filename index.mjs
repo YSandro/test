@@ -39,18 +39,20 @@ window.document.addEventListener('contextmenu', event => {
 
 window.addEventListener('load', () => {
 	const fogColor = new Color(getComputedStyle(document.querySelector('#scrim')).backgroundColor);
-	const clock = new Clock(true);
-	const mouse = new Vector2();
-	let delta = clock.getDelta(),
-		cntr = 1,
-		arcStarted = false;
-	const arcStart = new Vector3(),
+	const clock = new Clock(true),
+		mouse = new Vector2(),
+		arcStart = new Vector3(),
 		arcEnd = new Vector3(),
 		arcMaterial = new LineBasicMaterial({color: 'rgb(255,255,0)'}),
 		arcPoints = [],
-		arcGeometry = new BufferGeometry();
-	let soundOn = false;
+		arcGeometry = new BufferGeometry(),
+		look = new Vector3(0, 0.2, 0);
 
+	let delta = clock.getDelta(),
+		cntr = 1,
+		arcStarted = false,
+		soundOn = false;
+	
 	const scene = new Scene();
 	const camera = new PerspectiveCamera(
 		50,
@@ -86,9 +88,6 @@ window.addEventListener('load', () => {
 	scene.add(new AxesHelper(2));
 
 
-	const container = new Group();
-	scene.add(container);
-
 	const sphere = new Mesh(new SphereGeometry(1), new MeshBasicMaterial({
 		color: 'rgb(200,155,155)',
 		opacity: 0.5,
@@ -101,6 +100,10 @@ window.addEventListener('load', () => {
 	const sphereMarker = new Mesh(new SphereGeometry(0.04), new MeshBasicMaterial({color: 'rgb(255,100,50)', opacity: 0.6, transparent: true}));
 	sphereMarker.name = 'marker';
 	scene.add(sphereMarker);
+
+
+	const container = new Group();
+	scene.add(container);
 
 
 	const listener = new AudioListener();
@@ -158,14 +161,18 @@ window.addEventListener('load', () => {
 
 
 	const buildArc = (_arcStart, _arcEnd) => {
-		//console.log('arcStart:', _arcStart, ', arcEnd:', _arcEnd);
-		//const vFrom = new Vector3().copy(_arcStart).normalize();
-		//const vTo = new Vector3().copy(_arcEnd).normalize();
-		//const qt = new Quaternion().setFromUnitVectors(vFrom, vTo); console.log('qt:', qt);
+		const vFrom = _arcStart.clone().normalize();
+		const vTo = _arcEnd.clone().normalize();
+		const qt = (new Quaternion()).setFromUnitVectors(vFrom, vTo);
+
+		const del = Math.ceil(_arcStart.distanceTo(_arcEnd) / 0.1);
 
 		arcPoints.length = 0;
-		arcPoints.push((new Vector3()).copy(_arcStart));
-		arcPoints.push((new Vector3()).copy(_arcEnd));
+		arcPoints.push(_arcStart);
+		for(let i = 1; i < del; ++i){
+			arcPoints.push(_arcStart.clone().applyQuaternion((new Quaternion()).slerp(qt, (1 / del) * i)));
+		}
+		arcPoints.push(_arcEnd);
 		arcGeometry.setFromPoints(arcPoints);
 	}
 
@@ -218,6 +225,11 @@ window.addEventListener('load', () => {
 		container.position.x = Math.sin(cntr * 0.1) * 2.2;
 		container.position.y = Math.cos(cntr * 0.1) * 2.2;
 		container.position.z = Math.cos(cntr * 1.3);
+
+		camera.position.x = Math.cos(cntr * 0.1) * 3;
+		camera.position.z = Math.sin(cntr * 0.1) * 3;
+		camera.position.y = Math.sin(cntr);
+		camera.lookAt(look);
 
 		//if(++cntr > 9999999) cntr = 0;
 		if(cntr > 9999999) cntr = 0;
