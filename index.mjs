@@ -89,9 +89,9 @@ window.addEventListener('load', () => {
 
 
 	const sphere = new Mesh(new SphereGeometry(1), new MeshBasicMaterial({
-		color: 'rgb(200,155,155)',
+		color: 'rgb(100,110,120)',
 		opacity: 0.5,
-		transparent: true,
+		//transparent: true,
 	}));
 	sphere.receiveShadow = true;
 	scene.add(sphere);
@@ -160,6 +160,11 @@ window.addEventListener('load', () => {
 	}
 
 
+	/**
+	 * Arc over sphere
+	 * @param {Vector3} _arcStart 
+	 * @param {Vector3} _arcEnd 
+	 */
 	const buildArc = (_arcStart, _arcEnd) => {
 		const vFrom = _arcStart.clone().normalize();
 		const vTo = _arcEnd.clone().normalize();
@@ -168,6 +173,9 @@ window.addEventListener('load', () => {
 		const del = Math.ceil(_arcStart.distanceTo(_arcEnd) / 0.1);
 
 		arcPoints.length = 0;
+		_arcStart.multiplyScalar(1.01);
+		_arcEnd.multiplyScalar(1.01);
+
 		arcPoints.push(_arcStart);
 		for(let i = 1; i < del; ++i){
 			arcPoints.push(_arcStart.clone().applyQuaternion((new Quaternion()).slerp(qt, (1 / del) * i)));
