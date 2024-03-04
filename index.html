@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
 	<meta charset="utf8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>test</title>
 	<script type="importmap">
 {
@@ -11,21 +12,22 @@
 	}
 }
 	</script>
-	<script defer type="module" src="./index.js"></script>
+	<script type="module" src="./index.js"></script>
 	<style>
-body{
+html,body{
+	position: absolute;
 	margin: 0;
 	padding: 0;
+	width: 100%;
+	height: 100%;
 	overflow: hidden;
 	user-select: none;
 	font-family: Consolas, monospace;
-	font-size: 100%;
+	background-color: rgb(22, 55, 65);
 }
 #scrim{
-	display: block;
 	width: 100%;
 	height: 100%;
-	background-color: rgb(22, 55, 65);
 }
 #snd{
 	position: absolute;
