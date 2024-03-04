@@ -12,9 +12,9 @@ import {
 	LineBasicMaterial,
 	Mesh,
 	MeshBasicMaterial,
-	MeshLambertMaterial,
-	MeshPhongMaterial,
-	MeshToonMaterial,
+	//MeshLambertMaterial,
+	//MeshPhongMaterial,
+	//MeshToonMaterial,
 	PCFSoftShadowMap,
 	PerspectiveCamera,
 	PositionalAudio,
@@ -32,6 +32,8 @@ import {
 } from 'three';
 
 console.log('ThreeJs REVISION:', REVISION);
+
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 
 window.document.addEventListener('contextmenu', event => {
 	event.preventDefault();
@@ -52,16 +54,16 @@ window.addEventListener('load', () => {
 		cntr = 1,
 		arcStarted = false,
 		soundOn = false;
-	
+
 	const scene = new Scene();
 	const camera = new PerspectiveCamera(
 		50,
 		window.innerWidth / window.innerHeight,
 		1,
-		10
+		40
 	);
-	camera.position.x = 2.6;
-	camera.position.z = 2.6;
+	camera.position.x = 20;
+	camera.position.z = 20;
 	camera.position.y = 2;
 	camera.lookAt(0, 0.2, 0);
 
@@ -88,16 +90,24 @@ window.addEventListener('load', () => {
 	scene.add(new AxesHelper(2));
 
 
-	const sphere = new Mesh(new SphereGeometry(1), new MeshBasicMaterial({
-		color: 'rgb(100,110,120)',
-		opacity: 0.5,
-		//transparent: true,
-	}));
-	sphere.receiveShadow = true;
-	scene.add(sphere);
+	const planet = new Group();
+	planet.name = 'planet';
+	scene.add(planet);
+
+	const loader = new GLTFLoader();
+	loader.load(
+		'planet.gltf',
+		gltf => {
+			const mesh = gltf.scene.getObjectByProperty('type', 'Mesh');
+			mesh.material.roughness = 0.95;// ближе к единице - меньше световое пятно
+			mesh.receiveShadow = true;// console.log(_this.mesh);
+			//_this.mesh.castShadow = true;// создаёт рябь
+			planet.add(mesh);
+		}
+	);
 
 
-	const sphereMarker = new Mesh(new SphereGeometry(0.04), new MeshBasicMaterial({color: 'rgb(255,100,50)', opacity: 0.6, transparent: true}));
+	const sphereMarker = new Mesh(new SphereGeometry(0.2), new MeshBasicMaterial({color: 'rgb(255,100,50)', opacity: 0.6, transparent: true}));
 	sphereMarker.name = 'marker';
 	scene.add(sphereMarker);
 
@@ -119,7 +129,6 @@ window.addEventListener('load', () => {
 	});
 
 	const solnSprite = new Sprite();
-	solnSprite.scale.set(0.25, 0.25, 0.25);
 	const solnMap = new TextureLoader().load('dinamik_64.png', tex => {
 		const solnMaterial = new SpriteMaterial({map: solnMap, fog: false});
 		solnSprite.material = solnMaterial;
@@ -152,7 +161,7 @@ window.addEventListener('load', () => {
 
 	const rayCast = (retPos, click) => {
 		raycaster.setFromCamera(mouse, camera);
-		const intersects = raycaster.intersectObject(sphere);
+		const intersects = raycaster.intersectObject(planet);
 		if(intersects.length < 1) return false;
 		if(retPos) retPos.copy(intersects[0].point);
 		sphereMarker.position.copy(intersects[0].point);
@@ -173,8 +182,8 @@ window.addEventListener('load', () => {
 		const del = Math.ceil(_arcStart.distanceTo(_arcEnd) / 0.1);
 
 		arcPoints.length = 0;
-		_arcStart.multiplyScalar(1.01);
-		_arcEnd.multiplyScalar(1.01);
+		_arcStart.multiplyScalar(1.005);
+		_arcEnd.multiplyScalar(1.005);
 
 		arcPoints.push(_arcStart);
 		for(let i = 1; i < del; ++i){
@@ -230,12 +239,12 @@ window.addEventListener('load', () => {
 		cntr += delta;
 
 		// draw here
-		container.position.x = Math.sin(cntr * 0.1) * 2.2;
-		container.position.y = Math.cos(cntr * 0.1) * 2.2;
+		container.position.x = Math.sin(cntr * 0.1) * 11;
+		container.position.y = Math.cos(cntr * 0.1) * 11;
 		container.position.z = Math.cos(cntr * 1.3);
 
-		camera.position.x = Math.cos(cntr * 0.1) * 3;
-		camera.position.z = Math.sin(cntr * 0.1) * 3;
+		camera.position.x = Math.cos(cntr * 0.1) * 22;
+		camera.position.z = Math.sin(cntr * 0.1) * 22;
 		camera.position.y = Math.sin(cntr);
 		camera.lookAt(look);
 
